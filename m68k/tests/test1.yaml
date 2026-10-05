@@ -1,0 +1,39 @@
+limit: 2000
+memory_size: 0x1000
+
+memory_mapped_io:
+  0x80: [49, 32, 43, 32, 50, 10] # Строка '1 + 2\n'
+  0x84: [] #          ^ ^ Пробелы тоже считаются как символы
+
+reports:
+  - name: Check registers
+    slice: last
+    filter:
+      - state
+    view: |
+      D0: {D0:hex}
+      D1: {D1:dec}
+      D5: {D5:dec}
+      A0: {A0:hex}
+      A1: {A1:hex}
+      A2: {A2:hex}
+      A3: {A3:hex}
+      A7: {A7:hex}
+      SR: {SR:bin}
+      {memory:0:40}
+
+  - name: Check results
+    slice: last
+    filter:
+      - state
+    view: |
+      numio[0x80]: {io:0x80:dec}
+      numio[0x84]: {io:0x84:dec}
+      symio[0x80]: {io:0x80:sym}
+      symio[0x84]: {io:0x84:sym}
+
+    assert: |
+      numio[0x80]: [] >>> []
+      numio[0x84]: [] >>> [49,32,50,32,43]
+      symio[0x80]: "" >>> ""
+      symio[0x84]: "" >>> "1 2 +"
